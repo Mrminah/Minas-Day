@@ -1,0 +1,29 @@
+name: Minas Day
+on:
+  schedule:
+    - cron: "1-59/5 7-19 * * 1-5"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: minas-day
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - run: python day.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          TWELVE_KEY: ${{ secrets.TWELVE_KEY }}
+      - run: |
+          git config user.name "minas-bot"
+          git config user.email "minas-bot@users.noreply.github.com"
+          git add day_trades.json
+          git diff --cached --quiet || (git commit -m "update day trades" && (git push || (git pull --rebase && git push)))
